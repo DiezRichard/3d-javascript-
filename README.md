@@ -1,6 +1,6 @@
 # 3d-javascript-
 
-this is an interactive 3d object viewer in javascript.
+this is an interactive 3d object file (.obj) viewer in javascript.
 
 the zip file contains the project working.
 
