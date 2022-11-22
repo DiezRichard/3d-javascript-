@@ -9,18 +9,10 @@ const ctxJoystick = canvasJoystick.getContext("2d");
 
 //-------------------------------------//
 
-var scale = 12;
-var offset = 160;
-var howFar=8;
-
-/*
-//normal pMatrix
-var scale = 100;
-var offset = 100;
-var howFar = 5;
-*/
-
-var camera={x:0,y:0,z:10};
+var scale = 70;
+var offset = 110;
+var howFar=10;
+var camera={x:0,y:0,z:-1};
 var d= new Date();
 var angleX = Math.PI / 180;
 var angleY = Math.PI / 180;
@@ -32,7 +24,7 @@ var sin = Math.sin(angleX);
 var fov=90;
 var f= 1/Math.tan(fov/2*z);
 var a=innerHeight/innerWidth;
-var zNear=.1;
+var zNear=1;
 var zFar=100;
 var q= zFar/(zFar-zNear);
 
@@ -90,7 +82,6 @@ function loadObject(file)
         vectors.push(c);
         
       }
-      //vectors.sort();
       
     }//VECTORS
    
@@ -134,7 +125,7 @@ function loadObject(file)
 //-------------------------------------//
 //-------------------------------------//
 //-------------------------------------//
-
+/*
 
 //LOADER 2
 function loadObject2(file)
@@ -233,37 +224,58 @@ function loadObject2(file)
  
   return mesh;
 };// LOADER 2
-
+*/
 //-------------------------------------//
 //-------------------------------------//
 
 
 //-------------------------------------//
 //MATRICES
+
+//z rotation
 var zMatrix = [
           [cos, -sin, 0, 0],
           [sin, cos, 0, 0],
           [0, 0, 1, 0],
           [0, 0, 0, 0]];
-    
+ //x rotation   
   var  xMatrix = [
           [1, 0, 0, 0],
           [0, cos, -sin, 0],
           [0, sin, cos, 0],
           [0, 0, 0, 0]];
-    
+  //y rotation  
   var  yMatrix = [
           [cos, 0, -sin, 0],
           [0, 1, 0, 0],
           [sin, 0, cos, 0],
           [0, 0, 0, 0]];
     
+  //scale matrix      
+  var sMatrix=
+  [[scale, 0, 0,0],
+  [0, scale, 0, 0 ],
+  [0, 0, scale, 0],
+  [0, 0, 0,0]];
+    
+      
+  //translation matrix      
+  var tMatrix=
+  [[1, 0, 0,-offset],
+  [0, 1, 0, -offset ],
+  [0, 0, 0, 0],
+  [0, 0, 0,0]];
     
     
-   var copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
     
+ //  var copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
     
-  var  pMatrix = [[a * f, 0, 0, 0], [0, f, 0, 0], [0, 0, q, ], [0, 0, -.001, -q * zNear]];
+    //projection matrix
+  var  pMatrix = 
+  [[a * f, 0, 0, 0], 
+  [0, f, 0, 0], 
+  [0, 0, q, -q * zNear], 
+  [0, 0,0 ,0]];
 //-------------------------------------//
    
 function updateMatrix()
@@ -295,12 +307,26 @@ function updateMatrix()
       [sin, 0, cos, 0],
       [0,   0,  0, 0]];
   
-copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
-     
+
+  //translation matrix      
+  tMatrix=
+  [[1, 0, 0,-offset],
+  [0, 1, 0,-offset],
+  [0, 0, 0, 0],
+  [0,0, 0,0]];
+    
+    
+  
+//copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
+  
    
 //pMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 0, 0],[0, 0, .01,0]];
     
-    pMatrix= [[a*f, 0, 0,0], [0, f, 0,0], [0, 0, q,], [0, 0, -.001,-q*zNear]];
+    pMatrix= 
+    [[a*f, 0, 0,0], 
+    [0, f, 0, 0], 
+    [0, 0, q,-q*zNear], 
+    [0, 0,0,-1]];
       
     
 }//updtate Matrix values
@@ -322,11 +348,11 @@ for(let t of mesh)
   for (let v of t)
   {
     
-    let x1 = v.x * matrix[0][0] + v.y * matrix[0][1] + v.z * matrix[0][2]+matrix[3][0];
+    let x1 = v.x * matrix[0][0] + v.y * matrix[0][1] + v.z * matrix[0][2]+matrix[0][3];
 
-    let y1 = v.x * matrix[1][0] + v.y * matrix[1][1] + v.z * matrix[1][2]+matrix[3][1];
+    let y1 = v.x * matrix[1][0] + v.y * matrix[1][1] + v.z * matrix[1][2]+matrix[1][3];
 
-    let z1 = v.x * matrix[2][0] + v.y * matrix[2][1] + v.z * matrix[2][2]+matrix[3][2];
+    let z1 = v.x * matrix[2][0] + v.y * matrix[2][1] + v.z * matrix[2][2]+matrix[2][3];
     
     let w=v.x * matrix[3][0] + v.y * matrix[3][1] + v.z * matrix[3][2]+matrix[3][3];
     
@@ -369,17 +395,17 @@ function drawMesh(m,dotTable,zmesh)
     if(dotTable[i]>0)
     {
  
-      let x1 = (m[i][0].x + 1) / 2 * scale + offset;
-      let y1 = (m[i][0].y + 1) / 2 * scale + offset;
-      let x2 = (m[i][1].x + 1) / 2 * scale + offset;
-      let y2 = (m[i][1].y + 1) / 2 * scale + offset;
-      let x3 = (m[i][2].x + 1) / 2 * scale + offset;
-      let y3 = (m[i][2].y + 1) / 2 * scale + offset;
+      let x1 = m[i][0].x;
+      let y1 = m[i][0].y ;
+      let x2 = m[i][1].x ;
+      let y2 = m[i][1].y ;
+      let x3 = m[i][2].x ;
+      let y3 = m[i][2].y ;
       
       let zmed = ((zmesh[i][0].z-howFar) + (zmesh[i][1].z-howFar) + (zmesh[i][2].z-howFar)) / 3;
       
-      rgb=(100-zmed*100);
-     
+      rgb=(-zmed+150);
+  
       ctxMain.globalAlpha=1;
      
       ctxMain.beginPath();
@@ -406,11 +432,11 @@ function drawMesh(m,dotTable,zmesh)
       ctxMain.lineWidth=1;
    
   
-  //ctxMain.strokeStyle="green";
+      ctxMain.strokeStyle=ctxMain.fillstyle;
       ctxMain.stroke();
- ctxMain.fill();
+      ctxMain.fill();
    
-   
+   //console.log(zmed);
    
   }
   }
@@ -424,7 +450,8 @@ function drawMesh(m,dotTable,zmesh)
 
 function fdotProduct(normal, vector, camera)
 {
-  let result=parseInt(
+  //I got the opposite considering the negative camera position, and the far z positive direction.
+  let result=-(
     normal.x*(vector.x-camera.x)+
     normal.y*(vector.y-camera.y)+
     normal.z*(vector.z-camera.z));
@@ -548,18 +575,22 @@ updateMatrix();
 
 //calculations
 
-let meshX=multiMatrix(mesh,xMatrix);
+let meshS=multiMatrix(mesh,sMatrix);
+let meshX=multiMatrix(meshS,xMatrix);
 let meshY=multiMatrix(meshX,yMatrix);
 let meshZ=multiMatrix(meshY,zMatrix);
-
 orderMeshByZ(meshZ);
 
-let dotTable=crossProduct(meshZ);
+let meshT=multiMatrix(meshZ,tMatrix);
+moveFarAway(meshT,8);
 
-moveFarAway(meshZ,8);
+
+let dotTable=crossProduct(meshT);
 
 
-let meshP=multiMatrix(meshZ,pMatrix);
+
+
+let meshP=multiMatrix(meshT,pMatrix);
 
 //DRAW
 drawMesh(meshP,dotTable,meshZ);
