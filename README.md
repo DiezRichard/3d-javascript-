@@ -10,4 +10,8 @@ I imported objects to Prisma3D app, then exported from it,
 that way I standardized object files.
 
 
-this is the first stage of 3d for my game engine.
+camera added
+
+no clipping yet
+
+errors can be seen
