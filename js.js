@@ -9,37 +9,51 @@ const ctxJoystick = canvasJoystick.getContext("2d");
 
 //-------------------------------------//
 
-var scale = 70;
-var offset = 110;
+//-------------------------------------//
+
+var scale = 100;
+var offset = 100;
 var howFar=10;
+
+//cam values
 var camera={x:0,y:0,z:-1};
-var d= new Date();
-var angleX = Math.PI / 180;
-var angleY = Math.PI / 180;
-var angleZ = Math.PI / 180;
+var camFwd={x:0,y:0,z:1};
+var camUp={x:0,y:1,z:0};
+
 var z = Math.PI / 180;
-var cos = Math.cos(angleX);
-var sin = Math.sin(angleX);
+
+//y camera rotation
+var yaw=z;
+var pitch=z; 
+
+//velocity vector
+var forwardV={x:0,y:0,z:.1};
+
+camUp= vectorAdd(camera, camUp);
+var camRight= cross(camFwd,camUp);
+
+var d= new Date();
+var angle = Math.PI / 180;
+
+var cos = Math.cos(angle);
+var sin = Math.sin(angle);
 
 var fov=90;
 var f= 1/Math.tan(fov/2*z);
 var a=innerHeight/innerWidth;
 var zNear=1;
 var zFar=100;
-var q= zFar/(zFar-zNear);
+var q=zFar/(zNear-zFar);
 
 //-------------------------------------//
 
-var obj="obj/teapot.obj";
 
-var mesh=loadObject(obj);
 
+var mesh=loadObject2("obj/axis.obj");
 //LOADER
-
 function loadObject(file)
 {
   var request = new XMLHttpRequest();
-  
   let mesh= [];
   request.open("GET", file, false);
  
@@ -50,20 +64,29 @@ function loadObject(file)
     {
       if (request.status === 200 || request.status == 0)
       {
+       
+    
+    
+    
     var obj=request.responseText;
     var str=String(obj);
     
     //console.log(str);
     
-   let arr= str.split(/\n/);
+   let arr= str.split(/\n/gm);
    let vectors=[];
+  // let mesh=[];
+   //console.log(arr[0]);
    
-    //VECTORS
-    for(let i=0;i<arr.length;i++)
+   
+   
+   
+   //VECTORS
+    for(let i=arr.length-1;i>=0;i--)
     {
       
       //vectors
-      if (arr[i].match(/^v\s/))
+      if (arr[i].match(/^v\s/gm))
       {
         //erase
          let p= arr[i].replace("v ","");
@@ -75,21 +98,24 @@ function loadObject(file)
         //fill in vector coords in numbers
         let  c={x:(+v[0]),y:(+v[1]),z:(+v[2])};
         
-      
+        
         
         //add vectors
-        
         vectors.push(c);
         
       }
       
     }//VECTORS
+    
+
+    
+    //vectors.sort();
    
    //TRIANGLES
-   for(let i=0;i<arr.length;i++)
+   for(let i=arr.length-1;i>=0;i--)
     {
     //triangles
-    if(arr[i].match(/^f/))
+    if(arr[i].match(/^f/gm))
       {
         //clean
         let clean= arr[i].replace("f ","");
@@ -105,18 +131,25 @@ function loadObject(file)
         
   
         triangle.push(vectors[index1-1],vectors[index2-1],vectors[index3-1]);
-
+        
         mesh.push(triangle);
+        
+       // console.log(index1);
+       // console.log(index2);
+       // console.log(index3);
       }
-    }//TRIANGLES i loop
+    }//TRIANGLES
    
-   
+    
+    //console.log(mesh[0]);
+    
+    //console.log(vectors[0]);
   }
   
     }
   }
   request.send(null);
- 
+  
   return mesh;
 };
 
@@ -125,7 +158,7 @@ function loadObject(file)
 //-------------------------------------//
 //-------------------------------------//
 //-------------------------------------//
-/*
+
 
 //LOADER 2
 function loadObject2(file)
@@ -175,13 +208,16 @@ function loadObject2(file)
         //fill in vector coords in numbers
         let  c={x:(+v[0]),y:(+v[1]),z:(+v[2])};
         
-
+        
+        
         //add vectors
         vectors.push(c);
         
       }
       
     }//VECTORS
+    
+
     
     //vectors.sort();
    
@@ -215,82 +251,70 @@ function loadObject2(file)
     }//TRIANGLES
    
     
+    //console.log(mesh[0]);
+    
+    //console.log(vectors[0]);
   }
   
     }
   }
   request.send(null);
   
- 
   return mesh;
 };// LOADER 2
-*/
+
 //-------------------------------------//
 //-------------------------------------//
 
 
 //-------------------------------------//
 //MATRICES
+var zMatrix=[
+    [cos, -sin, 0],
+    [sin,  cos, 0],
+    [0,   0,   1]];
 
-//z rotation
-var zMatrix = [
-          [cos, -sin, 0, 0],
-          [sin, cos, 0, 0],
-          [0, 0, 1, 0],
-          [0, 0, 0, 0]];
- //x rotation   
-  var  xMatrix = [
-          [1, 0, 0, 0],
-          [0, cos, -sin, 0],
-          [0, sin, cos, 0],
-          [0, 0, 0, 0]];
-  //y rotation  
-  var  yMatrix = [
-          [cos, 0, -sin, 0],
-          [0, 1, 0, 0],
-          [sin, 0, cos, 0],
-          [0, 0, 0, 0]];
+var xMatrix = [
+    [1,   0,   0],
+    [0,cos, -sin],
+    [0,sin, cos]];
     
-  //scale matrix      
-  var sMatrix=
-  [[scale, 0, 0,0],
-  [0, scale, 0, 0 ],
-  [0, 0, scale, 0],
-  [0, 0, 0,0]];
+var yMatrix = [
+    [cos, 0, -sin],
+    [0,   1,    0],
+    [sin, 0, cos]];
     
-      
-  //translation matrix      
-  var tMatrix=
-  [[1, 0, 0,-offset],
-  [0, 1, 0, -offset ],
-  [0, 0, 0, 0],
-  [0, 0, 0,0]];
+var pMatrix = [
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0]];
+
+var iMatrix = [
+    [-1, 0, 0, 0],
+    [0, -1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]];
+
+var tCamMatrix = [
+        [1, 0, 0, -camera.x],
+        [0, 1, 0, -camera.y],
+        [0, 0, 1, -camera.z],
+        [0, 0, 0, 0]
     
+        ];
     
-    
- //  var copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
-    
-    //projection matrix
-  var  pMatrix = 
-  [[a * f, 0, 0, 0], 
-  [0, f, 0, 0], 
-  [0, 0, q, -q * zNear], 
-  [0, 0,0 ,0]];
 //-------------------------------------//
    
 function updateMatrix()
 {
-   cos = Math.cos(angleZ);
-   sin = Math.sin(angleZ);
+   cos = Math.cos(angle);
+   sin = Math.sin(angle);
   
   zMatrix = [
-      [cos,-sin, 0,0],
-      [sin,cos, 0, 0],
-      [0,  0,  1,  0],
-      [0,  0,  0, 0]];
-      
-   cos = Math.cos(angleX);
-   sin = Math.sin(angleX);
+      [cos, -sin, 0,0],
+      [sin, cos, 0,0],
+      [0, 0, 1,0],
+       [0, 0, 0,0]];
   
    xMatrix = [
       [1,  0,  0,  0],
@@ -298,36 +322,24 @@ function updateMatrix()
       [0, sin, cos,0],
       [0,   0,  0, 0]];
   
-  cos = Math.cos(angleY);
-  sin = Math.sin(angleY);
-  
    yMatrix = [
-      [cos, 0,-sin, 0],
+      [cos, 0, -sin,0],
       [0,   1,  0,  0],
       [sin, 0, cos, 0],
       [0,   0,  0, 0]];
   
-
-  //translation matrix      
-  tMatrix=
-  [[1, 0, 0,-offset],
-  [0, 1, 0,-offset],
-  [0, 0, 0, 0],
-  [0,0, 0,0]];
-    
-    
-  
-//copyMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 1, 0],[0, 0, 0,0]];
-  
-   
-//pMatrix = [[1, 0, 0,0],[0, 1, 0,0 ],[0, 0, 0, 0],[0, 0, .01,0]];
-    
-    pMatrix= 
-    [[a*f, 0, 0,0], 
-    [0, f, 0, 0], 
-    [0, 0, q,-q*zNear], 
-    [0, 0,0,-1]];
-      
+  tCamMatrix = [
+           [1, 0, 0, -camera.x],
+           [0, 1, 0, -camera.y],
+           [0, 0, 1, -camera.z],
+           [0, 0, 0, 0]
+           ];
+           
+   pMatrix =
+    [[a*f, 0, 0,0],
+    [0, f, 0,0],
+    [0, 0, q,(-zFar*zNear)/(zFar-zNear)],
+    [0, 0, .1,0]];
     
 }//updtate Matrix values
 
@@ -383,61 +395,41 @@ for(let t of mesh)
 //-------------------------------------//
 
 
-// DRAW 
 function drawMesh(m,dotTable,zmesh)
 {
-  let index=1;
+  
+for(let i=0;i<m.length;i++)
+{
 
-  for(let i=0;i<m.length;i++)
-  {
-  
-  
-    if(dotTable[i]>0)
-    {
+if(dotTable[i]>0)
+{
  
-      let x1 = m[i][0].x;
-      let y1 = m[i][0].y ;
-      let x2 = m[i][1].x ;
-      let y2 = m[i][1].y ;
-      let x3 = m[i][2].x ;
-      let y3 = m[i][2].y ;
-      
-      let zmed = ((zmesh[i][0].z-howFar) + (zmesh[i][1].z-howFar) + (zmesh[i][2].z-howFar)) / 3;
-      
-      rgb=(-zmed+150);
-  
-      ctxMain.globalAlpha=1;
+      let x1 = (m[i][0].x + 1) / 2 * scale + offset;
+      let y1 = (m[i][0].y + 1) / 2 * scale + offset;
+      let x2 = (m[i][1].x + 1) / 2 * scale + offset;
+      let y2 = (m[i][1].y + 1) / 2 * scale + offset;
+      let x3 = (m[i][2].x + 1) / 2 * scale + offset;
+      let y3 = (m[i][2].y + 1) / 2 * scale + offset;
+ 
+
      
+let zmed = ((zmesh[i][0].z) + (zmesh[i][1].z) + (zmesh[i][2].z)) / 3;
+      
+let rgb=((zmed)*100+1220+zmed*2);
+
+ctxMain.fillStyle =`rgb(${255},${rgb},${255})`;
+
+
+      ctxMain.globalAlpha=1;
       ctxMain.beginPath();
       ctxMain.moveTo(x1,y1);
       ctxMain.lineTo(x2,y2);
       ctxMain.lineTo(x3,y3);
       ctxMain.lineTo(x1,y1);
       ctxMain.closePath();
-
-
-      ctxMain.fillStyle =`rgb(${255},${rgb},${255})`;
-      
-      if(index>=20)
-      {
-        index=1;
-      }
-      
-      index++;
-      
-      ctxMain.globalAlpha=1;
-      ctxMain.strokeStyle=ctxMain.fillStyle;
-      //ctxMain.fillStyle="white";
-      
-      ctxMain.lineWidth=1;
-   
-  
-      ctxMain.strokeStyle=ctxMain.fillstyle;
       ctxMain.stroke();
       ctxMain.fill();
-   
-   //console.log(zmed);
-   
+
   }
   }
 }//DRAW MESH
@@ -450,30 +442,23 @@ function drawMesh(m,dotTable,zmesh)
 
 function fdotProduct(normal, vector, camera)
 {
-  //I got the opposite considering the negative camera position, and the far z positive direction.
-  let result=-(
+  let result=
     normal.x*(vector.x-camera.x)+
     normal.y*(vector.y-camera.y)+
-    normal.z*(vector.z-camera.z));
+    normal.z*(vector.z-camera.z);
   
   return result;
 }
 
 //-------------------------------------//
 
-
-
-
 function orderMeshByZ(zmesh)
 {
-  zmesh.sort((a, b) => {return b[0].z - a[0].z;});
-  
+ zmesh.sort((a, b) => {return b[0].z - a[0].z;});
+ 
 }//sort array
 
 //-------------------------------------//
-
-//-------------------------------------//
-
 //cross product
 function crossProduct(mesh)
 {
@@ -498,7 +483,7 @@ function crossProduct(mesh)
       y:line1.x*line2.z-line1.z*line2.x,
       z:line1.x*line2.y-line1.y*line2.x};
       
-    let hyp=(Math.sqrt(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z));
+    let hyp=Math.sqrt(normal.x*normal.x+normal.y*normal.y+normal.z*normal.z);
     
     let normal2={
       x:normal.x/hyp,
@@ -530,43 +515,17 @@ function moveFarAway(mesh, value)
 }
 
 //-------------------------------------//
-
-function copyMesh(inmesh)
-{
-  let outmesh=[];
-  
-  for(let t of inmesh)
-  {
-    let tri=[];
-    for(let v of t)
-    {
-      tri.push(v);
-    }
-   outmesh.push(tri);
-  }
-  
-  return outmesh;
-}
-
-
-//-------------------------------------//
-drawJoystick(ctxJoystick);
-
-//-------------------------------------//
 //MAIN
 
-requestAnimationFrame(main);
+drawJoystick(ctxJoystick);
 
-function main()
-{
-  
+setInterval(function(){
+ 
 //clear screen 
 ctxMain.clearRect(0,0,320,320); 
 
 //change angle
 //angle+=2*z;
-
-joystick();
 
 
 
@@ -575,26 +534,71 @@ updateMatrix();
 
 //calculations
 
-let meshS=multiMatrix(mesh,sMatrix);
-let meshX=multiMatrix(meshS,xMatrix);
+let meshI= multiMatrix(mesh,iMatrix);
+let meshX=multiMatrix(meshI,xMatrix);
 let meshY=multiMatrix(meshX,yMatrix);
 let meshZ=multiMatrix(meshY,zMatrix);
 orderMeshByZ(meshZ);
+moveFarAway(meshZ,howFar);
 
-let meshT=multiMatrix(meshZ,tMatrix);
-moveFarAway(meshT,8);
+//-------------------------------------//
+
+cosPitch= Math.cos(pitch);
+sinPitch= Math.sin(pitch);
+
+cosYaw = Math.cos(yaw);
+sinYaw = Math.sin(yaw);
+
+//-------------------------------------//
 
 
-let dotTable=crossProduct(meshT);
+/*
+yMatrix = [
+      [cosYaw, 0, -sinYaw, 0],
+      [0, 1, 0, 0],
+      [sinYaw, 0, cosYaw, 0],
+      [0, 0, 0, 0]];
+ */     
+
+//rotate by Yaw
+//meshR = multiMatrix(meshZ,yMatrix);
+
+//-------------------------------------//
+
+let xAxis= {x:cosYaw,y:0,z:-sinYaw};
+let yAxis= {x:sinYaw*sinPitch,y:cosPitch,z:cosYaw*sinPitch};
+let zAxis= {x:sinYaw*cosPitch,y:-sinPitch,z:cosPitch*cosYaw};
 
 
+tCamMatrix = [
+[xAxis.x, xAxis.y, xAxis.z, -dotP(camera,xAxis)],
+[yAxis.x, yAxis.y, yAxis.z, -dotP(camera,yAxis)],
+[zAxis.x, zAxis.y, zAxis.z, -dotP(camera,zAxis)],
+[0, 0, 0, 1]
 
+        ];
+        
+        
+//transform
+meshCam = multiMatrix(meshZ, tCamMatrix);
 
-let meshP=multiMatrix(meshT,pMatrix);
+joystick(xAxis,yAxis,zAxis);
+//-------------------------------------//
 
+let dotTable=crossProduct(meshCam);
+
+//projection 
+let meshP=multiMatrix(meshCam,pMatrix);
 //DRAW
-drawMesh(meshP,dotTable,meshZ);
+drawMesh(meshP,dotTable,meshCam);
 
-requestAnimationFrame(main);
+ctxMain.fillStyle="red";
 
-};//main
+ctxMain.fillText("x: "+camera.x,20,240);
+ctxMain.fillText("y: "+camera.y,20,260);
+ctxMain.fillText("z: "+camera.z,20,280);
+ctxMain.fillText("yaw: "+yaw,20,300);
+
+},100);
+
+//-------------------------------------//

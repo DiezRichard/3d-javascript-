@@ -6,15 +6,18 @@ var touchX2=0;
 var touchY2=0;
 
 
-function joystick(inmesh)
+function joystick(xAxis,yAxis,zAxis)
 {
 
-let matrix=[];
+
 //UP
 if(touchX>upBtn.x1 && touchY > upBtn.y1 && touchX < upBtn.x2 && touchY < upBtn.y2 || touchX2>upBtn.x1 && touchY2 > upBtn.y1 && touchX2 < upBtn.x2 && touchY2 < upBtn.y2)
 {
 
-angleX+=1*z;
+//angleX+=1*z;
+//camera.y+=.1;
+//camera =vectorAdd(camera, forwardV);
+camera =vectorSub(camera, yAxis);
 
 };//UP
 
@@ -23,7 +26,11 @@ angleX+=1*z;
 //DOWN
 if(touchX>dwnBtn.x1 && touchY > dwnBtn.y1 && touchX < dwnBtn.x2 && touchY < dwnBtn.y2 || touchX2>dwnBtn.x1 && touchY2 > dwnBtn.y1 && touchX2 < dwnBtn.x2 && touchY2 < dwnBtn.y2)
 {
- angleX-=1*z;
+//angleX-=1*z;
+//camera.y-=.1;
+camera =vectorAdd(camera, yAxis);
+//camera =vectorSub(camera, forwardV);
+
 
 };//DOWN
 
@@ -32,7 +39,9 @@ if(touchX>dwnBtn.x1 && touchY > dwnBtn.y1 && touchX < dwnBtn.x2 && touchY < dwnB
 // LEFT
 if (touchX > lftBtn.x1 && touchY > lftBtn.y1 && touchX < lftBtn.x2 && touchY < lftBtn.y2 || touchX2 > lftBtn.x1 && touchY2 > lftBtn.y1 && touchX2 < lftBtn.x2 && touchY2 < lftBtn.y2)
 {
-angleY += 1 * z;
+//angleY += .1 * z;
+//camera.x-=.1;
+camera =vectorSub(camera, xAxis);
 
 };// LEFT
 
@@ -41,8 +50,9 @@ angleY += 1 * z;
   // RIGHT
 if(touchX>rgtBtn.x1 && touchY > rgtBtn.y1 && touchX < rgtBtn.x2 && touchY < rgtBtn.y2 || touchX2>rgtBtn.x1 && touchY2 > rgtBtn.y1 && touchX2 < rgtBtn.x2 && touchY2 < rgtBtn.y2)
 {
-angleY -= 1 * z;
-
+//angleY -= .1 * z;
+//camera.x+=.1;
+camera =vectorAdd(camera, xAxis);
 };// RIGHT
 
 
@@ -50,8 +60,9 @@ angleY -= 1 * z;
 if (touchX > stRgtBtn.x1 && touchY > stRgtBtn.y1 && touchX < stRgtBtn.x2 && touchY < stRgtBtn.y2 || touchX2 > stRgtBtn.x1 && touchY2 > stRgtBtn.y1 && touchX2 < stRgtBtn.x2 && touchY2 < stRgtBtn.y2)
 {
 
-angleZ+=z;
-
+//angleZ+=.1*z;
+//camera.z+=.1;
+yaw+=1*z;
 }; //strafe right
 
 
@@ -62,32 +73,17 @@ angleZ+=z;
 if (touchX > stLftBtn.x1 && touchY > stLftBtn.y1 && touchX < stLftBtn.x2 && touchY < stLftBtn.y2 || touchX2 > stLftBtn.x1 && touchY2 > stLftBtn.y1 && touchX2 < stLftBtn.x2 && touchY2 < stLftBtn.y2)
 {
 
-angleZ-=z;
+//angleZ-=.1*z;
+//camera.z-=.1;
+yaw-=1*z;
 }; //STRAFE LEFT
 
 //ACTION
 if (touchX > actionBtn.x1 && touchY > actionBtn.y1 && touchX < actionBtn.x2 && touchY < actionBtn.y2 || touchX2 > actionBtn.x1 && touchY2 > actionBtn.y1 && touchX2 < actionBtn.x2 && touchY2 < actionBtn.y2)
 {
   
-  if(obj.includes("teapot"))
-  {
-   obj="obj/sphere.obj";
-   angleX=0;
-   angleY=0;
-   angleZ=0;
-   updateMatrix();
-   
-  }
-  else
-  {
-    obj="obj/teapot.obj";
-  }
+camera =vectorAdd(camera, zAxis);
   
-  mesh=loadObject(obj);
-  angleX = 0;
-  angleY = 0;
-  angleZ = 0;
-  updateMatrix();
   
 }// action
 
